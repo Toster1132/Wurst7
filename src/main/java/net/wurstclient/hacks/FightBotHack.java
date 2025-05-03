@@ -25,6 +25,7 @@ import net.wurstclient.events.RenderListener;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.DontSaveState;
 import net.wurstclient.hack.Hack;
+import net.wurstclient.mixinterface.IKeyBinding;
 import net.wurstclient.settings.AttackSpeedSliderSetting;
 import net.wurstclient.settings.CheckboxSetting;
 import net.wurstclient.settings.PauseAttackOnContainersSetting;
@@ -35,42 +36,36 @@ import net.wurstclient.settings.SwingHandSetting.SwingHand;
 import net.wurstclient.settings.filterlists.EntityFilterList;
 import net.wurstclient.util.EntityUtils;
 
-@SearchTags({"fight bot"})
+@SearchTags({ "fight bot" })
 @DontSaveState
 public final class FightBotHack extends Hack
-	implements UpdateListener, RenderListener
-{
+		implements UpdateListener, RenderListener {
 	private final SliderSetting range = new SliderSetting("Range",
-		"Attack range (like Killaura)", 4.25, 1, 6, 0.05, ValueDisplay.DECIMAL);
-	
-	private final AttackSpeedSliderSetting speed =
-		new AttackSpeedSliderSetting();
-	
+			"Attack range (like Killaura)", 4.25, 1, 6, 0.05, ValueDisplay.DECIMAL);
+
+	private final AttackSpeedSliderSetting speed = new AttackSpeedSliderSetting();
+
 	private final SwingHandSetting swingHand = new SwingHandSetting(
-		SwingHandSetting.genericCombatDescription(this), SwingHand.CLIENT);
-	
+			SwingHandSetting.genericCombatDescription(this), SwingHand.CLIENT);
+
 	private final SliderSetting distance = new SliderSetting("Distance",
-		"How closely to follow the target.\n"
-			+ "This should be set to a lower value than Range.",
-		3, 1, 6, 0.05, ValueDisplay.DECIMAL);
-	
-	private final CheckboxSetting useAi =
-		new CheckboxSetting("Use AI (experimental)", false);
-	
-	private final PauseAttackOnContainersSetting pauseOnContainers =
-		new PauseAttackOnContainersSetting(true);
-	
-	private final EntityFilterList entityFilters =
-		EntityFilterList.genericCombat();
-	
+			"How closely to follow the target.\n"
+					+ "This should be set to a lower value than Range.",
+			3, 1, 6, 0.05, ValueDisplay.DECIMAL);
+
+	private final CheckboxSetting useAi = new CheckboxSetting("Use AI (experimental)", false);
+
+	private final PauseAttackOnContainersSetting pauseOnContainers = new PauseAttackOnContainersSetting(true);
+
+	private final EntityFilterList entityFilters = EntityFilterList.genericCombat();
+
 	private EntityPathFinder pathFinder;
 	private PathProcessor processor;
 	private int ticksProcessing;
-	
-	public FightBotHack()
-	{
+
+	public FightBotHack() {
 		super("FightBot");
-		
+
 		setCategory(Category.COMBAT);
 		addSetting(range);
 		addSetting(speed);
@@ -78,161 +73,173 @@ public final class FightBotHack extends Hack
 		addSetting(distance);
 		addSetting(useAi);
 		addSetting(pauseOnContainers);
-		
+
 		entityFilters.forEach(this::addSetting);
 	}
-	
+
 	@Override
-	protected void onEnable()
-	{
+	protected void onEnable() {
 		// disable other killauras
-		
+
 		pathFinder = new EntityPathFinder(MC.player);
-		
+
 		speed.resetTimer();
 		EVENTS.add(UpdateListener.class, this);
 		EVENTS.add(RenderListener.class, this);
+		MC.options.useKey.setPressed(true);
 	}
-	
+
 	@Override
-	protected void onDisable()
-	{
+	protected void onDisable() {
 		// remove listener
 		EVENTS.remove(UpdateListener.class, this);
 		EVENTS.remove(RenderListener.class, this);
-		
+		IKeyBinding.get(MC.options.useKey).resetPressedState();
+
 		pathFinder = null;
 		processor = null;
 		ticksProcessing = 0;
 		PathProcessor.releaseControls();
 	}
-	
+
+	private long skyblockCooldownStart = 0;
+	private long gardenCooldownStart = 0;
+	private final int cooldown = 5000;
+	private boolean skyblockOnCooldown = false;
+	private boolean gardenOnCooldown = false;
+
 	@Override
-	public void onUpdate()
-	{
+	public void onUpdate() {
+
+		long now = System.currentTimeMillis();
+		int y = MC.player.getBlockY();
+
+		int randomExtra = (int) (Math.random() * 901) + 100;
+		if (skyblockOnCooldown
+				&& now - skyblockCooldownStart >= cooldown + randomExtra)
+			skyblockOnCooldown = false;
+
+		int randomExtra2 = (int) (Math.random() * 901) + 100;
+		if (gardenOnCooldown
+				&& now - gardenCooldownStart >= cooldown + randomExtra2)
+			gardenOnCooldown = false;
+		if (y == 75 && !skyblockOnCooldown) {
+			MC.player.networkHandler.sendChatCommand("skyblock");
+			skyblockOnCooldown = true;
+			skyblockCooldownStart = now;
+		} else if (y == 70 && !gardenOnCooldown) {
+			MC.player.networkHandler.sendChatCommand("warp garden");
+			gardenOnCooldown = true;
+			gardenCooldownStart = now;
+		}
+
 		speed.updateTimer();
-		
-		if(pauseOnContainers.shouldPause())
+
+		if (pauseOnContainers.shouldPause())
 			return;
-		
+
 		// set entity
 		Stream<Entity> stream = EntityUtils.getAttackableEntities();
 		stream = entityFilters.applyTo(stream);
-		
+
 		Entity entity = stream
-			.min(
-				Comparator.comparingDouble(e -> MC.player.squaredDistanceTo(e)))
-			.orElse(null);
-		if(entity == null)
+				.min(
+						Comparator.comparingDouble(e -> MC.player.squaredDistanceTo(e)))
+				.orElse(null);
+		if (entity == null)
 			return;
-		
-		if(useAi.isChecked())
-		{
+
+		if (useAi.isChecked()) {
 			// reset pathfinder
-			if((processor == null || processor.isDone() || ticksProcessing >= 10
-				|| !pathFinder.isPathStillValid(processor.getIndex()))
-				&& (pathFinder.isDone() || pathFinder.isFailed()))
-			{
+			if ((processor == null || processor.isDone() || ticksProcessing >= 10
+					|| !pathFinder.isPathStillValid(processor.getIndex()))
+					&& (pathFinder.isDone() || pathFinder.isFailed())) {
 				pathFinder = new EntityPathFinder(entity);
 				processor = null;
 				ticksProcessing = 0;
 			}
-			
+
 			// find path
-			if(!pathFinder.isDone() && !pathFinder.isFailed())
-			{
+			if (!pathFinder.isDone() && !pathFinder.isFailed()) {
 				PathProcessor.lockControls();
 				WURST.getRotationFaker()
-					.faceVectorClient(entity.getBoundingBox().getCenter());
+						.faceVectorClient(entity.getBoundingBox().getCenter());
 				pathFinder.think();
 				pathFinder.formatPath();
 				processor = pathFinder.getProcessor();
 			}
-			
+
 			// process path
-			if(!processor.isDone())
-			{
+			if (!processor.isDone()) {
 				processor.process();
 				ticksProcessing++;
 			}
-		}else
-		{
+		} else {
 			// jump if necessary
-			if(MC.player.horizontalCollision && MC.player.isOnGround())
+			if (MC.player.horizontalCollision && MC.player.isOnGround())
 				MC.player.jump();
-			
+
 			// swim up if necessary
-			if(MC.player.isTouchingWater() && MC.player.getY() < entity.getY())
+			if (MC.player.isTouchingWater() && MC.player.getY() < entity.getY())
 				MC.player.addVelocity(0, 0.04, 0);
-			
+
 			// control height if flying
-			if(!MC.player.isOnGround() && (MC.player.getAbilities().flying)
-				&& MC.player.squaredDistanceTo(entity.getX(), MC.player.getY(),
-					entity.getZ()) <= MC.player.squaredDistanceTo(
-						MC.player.getX(), entity.getY(), MC.player.getZ()))
-			{
-				if(MC.player.getY() > entity.getY() + 1D)
+			if (!MC.player.isOnGround() && (MC.player.getAbilities().flying)
+					&& MC.player.squaredDistanceTo(entity.getX(), MC.player.getY(),
+							entity.getZ()) <= MC.player.squaredDistanceTo(
+									MC.player.getX(), entity.getY(), MC.player.getZ())) {
+				if (MC.player.getY() > entity.getY() + 1D)
 					MC.options.sneakKey.setPressed(true);
-				else if(MC.player.getY() < entity.getY() - 1D)
+				else if (MC.player.getY() < entity.getY() - 1D)
 					MC.options.jumpKey.setPressed(true);
-			}else
-			{
+			} else {
 				MC.options.sneakKey.setPressed(false);
 				MC.options.jumpKey.setPressed(false);
 			}
-			
+
 			// follow entity
 			MC.options.forwardKey.setPressed(
-				MC.player.distanceTo(entity) > distance.getValueF());
+					MC.player.distanceTo(entity) > distance.getValueF());
 			WURST.getRotationFaker()
-				.faceVectorClient(entity.getBoundingBox().getCenter());
+					.faceVectorClient(entity.getBoundingBox().getCenter());
 		}
-		
+
 		// check cooldown
-		if(MC.player.squaredDistanceTo(entity) > Math.pow(range.getValue(), 2))
+		if (MC.player.squaredDistanceTo(entity) > Math.pow(range.getValue(), 2))
 			return;
-		
+
 		// check range
-		if(MC.player.squaredDistanceTo(entity) > Math.pow(range.getValue(), 2))
+		if (MC.player.squaredDistanceTo(entity) > Math.pow(range.getValue(), 2))
 			return;
-		
-		// milk entity
-		MC.options.useKey.setPressed(true);
 	}
-	
+
 	@Override
-	public void onRender(MatrixStack matrixStack, float partialTicks)
-	{
+	public void onRender(MatrixStack matrixStack, float partialTicks) {
 		PathCmd pathCmd = WURST.getCmds().pathCmd;
 		pathFinder.renderPath(matrixStack, pathCmd.isDebugMode(),
-			pathCmd.isDepthTest());
+				pathCmd.isDepthTest());
 	}
-	
-	private class EntityPathFinder extends PathFinder
-	{
+
+	private class EntityPathFinder extends PathFinder {
 		private final Entity entity;
-		
-		public EntityPathFinder(Entity entity)
-		{
+
+		public EntityPathFinder(Entity entity) {
 			super(BlockPos.ofFloored(entity.getPos()));
 			this.entity = entity;
 			setThinkTime(1);
 		}
-		
+
 		@Override
-		protected boolean checkDone()
-		{
-			return done =
-				entity.squaredDistanceTo(Vec3d.ofCenter(current)) <= Math
+		protected boolean checkDone() {
+			return done = entity.squaredDistanceTo(Vec3d.ofCenter(current)) <= Math
 					.pow(distance.getValue(), 2);
 		}
-		
+
 		@Override
-		public ArrayList<PathPos> formatPath()
-		{
-			if(!done)
+		public ArrayList<PathPos> formatPath() {
+			if (!done)
 				failed = true;
-			
+
 			return super.formatPath();
 		}
 	}

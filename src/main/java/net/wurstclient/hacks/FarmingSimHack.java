@@ -38,10 +38,8 @@ public final class FarmingSimHack extends Hack implements UpdateListener
 		IKeyBinding.get(MC.options.rightKey).resetPressedState();
 		IKeyBinding.get(MC.options.backKey).resetPressedState();
 		IKeyBinding.get(MC.options.attackKey).resetPressedState();
-		IKeyBinding.get(MC.options.sneakKey).resetPressedState();
 	}
 	
-	private int timer = 2;
 	private long skyblockCooldownStart = 0;
 	private long gardenCooldownStart = 0;
 	private final int cooldown = 5000;
@@ -70,11 +68,7 @@ public final class FarmingSimHack extends Hack implements UpdateListener
 			&& now - gardenCooldownStart >= cooldown + randomExtra2)
 			gardenOnCooldown = false;
 		
-		if(timer == 2)
-		{
-			// pest
-			timer = 0;
-		}else if(y == 75 && !skyblockOnCooldown)
+		if(y == 75 && !skyblockOnCooldown)
 		{
 			MC.player.networkHandler.sendChatCommand("skyblock");
 			skyblockOnCooldown = true;
@@ -100,21 +94,18 @@ public final class FarmingSimHack extends Hack implements UpdateListener
 			if(x == 140 && z == -48)
 			{
 				MC.player.networkHandler.sendChatCommand("warp garden");
-				timer++;
 			}else if((z >= -48 && z <= 142) && (x == 49 || x == 63 || x == 77
 				|| x == 91 || x == 105 || x == 119 || x == 133))
 			{
 				MC.options.rightKey.setPressed(true);
 				MC.options.forwardKey.setPressed(true);
 				IKeyBinding.get(MC.options.leftKey).resetPressedState();
-				IKeyBinding.get(MC.options.sneakKey).resetPressedState();
 			}else if((z >= -48 && z <= 143) && (x == 56 || x == 70 || x == 84
 				|| x == 98 || x == 112 || x == 126 || x == 140))
 			{
 				MC.options.leftKey.setPressed(true);
 				MC.options.forwardKey.setPressed(true);
 				IKeyBinding.get(MC.options.rightKey).resetPressedState();
-				IKeyBinding.get(MC.options.sneakKey).resetPressedState();
 			}
 		}
 	}
