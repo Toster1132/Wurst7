@@ -36,6 +36,5 @@ public final class GardenHack extends Hack implements UpdateListener
 	
 	@Override
 	public void onUpdate()
-	{
-	}
+	{}
 }

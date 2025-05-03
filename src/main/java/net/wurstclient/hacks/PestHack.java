@@ -39,6 +39,6 @@ public final class PestHack extends Hack implements UpdateListener
 	@Override
 	public void onUpdate()
 	{
-
+		
 	}
 }
