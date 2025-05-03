@@ -42,58 +42,79 @@ public final class FarmingSimHack extends Hack implements UpdateListener
 	}
 	
 	private int timer = 2;
+	private long skyblockCooldownStart = 0;
+	private long gardenCooldownStart = 0;
+	private final int cooldown = 5000;
+	private boolean skyblockOnCooldown = false;
+	private boolean gardenOnCooldown = false;
 	
 	@Override
 	public void onUpdate()
 	{
-		if(MC.player != null)
+		if(MC.player == null)
+			return;
+		
+		int x = MC.player.getBlockX();
+		int y = MC.player.getBlockY();
+		int z = MC.player.getBlockZ();
+		
+		long now = System.currentTimeMillis();
+		
+		int randomExtra = (int)(Math.random() * 901) + 100;
+		if(skyblockOnCooldown
+			&& now - skyblockCooldownStart >= cooldown + randomExtra)
+			skyblockOnCooldown = false;
+		
+		int randomExtra2 = (int)(Math.random() * 901) + 100;
+		if(gardenOnCooldown
+			&& now - gardenCooldownStart >= cooldown + randomExtra2)
+			gardenOnCooldown = false;
+		
+		if(timer == 2)
 		{
-			int x = MC.player.getBlockX();
-			int y = MC.player.getBlockY();
-			int z = MC.player.getBlockZ();
-			if(timer == 2)
+			// pest
+			timer = 0;
+		}else if(y == 75 && !skyblockOnCooldown)
+		{
+			MC.player.networkHandler.sendChatCommand("skyblock");
+			skyblockOnCooldown = true;
+			skyblockCooldownStart = now;
+		}else if(y == 70 && !gardenOnCooldown)
+		{
+			MC.player.networkHandler.sendChatCommand("warp garden");
+			gardenOnCooldown = true;
+			gardenCooldownStart = now;
+		}else
+		{
+			MC.options.attackKey.setPressed(true);
+			
+			if(x < 47 || x > 143 || z < -48 || z > 143)
 			{
-				// pestXterm
-				timer = 0;
-			}else if(y == 75)
+				MC.inGameHud.getChatHud()
+					.addMessage(Text.of("X or Z are Bad!!!"));
+			}else if(y > 69 || y < 68)
 			{
-				MC.player.networkHandler.sendChatCommand("skyblock");
+				MC.inGameHud.getChatHud().addMessage(Text.of("Y is Bad!!!"));
+			}
+			
+			if(x == 140 && z == -48)
+			{
 				MC.player.networkHandler.sendChatCommand("warp garden");
-			}else if(y == 70)
+				timer++;
+			}else if((z >= -48 && z <= 142) && (x == 49 || x == 63 || x == 77
+				|| x == 91 || x == 105 || x == 119 || x == 133))
 			{
-				MC.player.networkHandler.sendChatCommand("warp garden");
-			}else
+				MC.options.rightKey.setPressed(true);
+				MC.options.forwardKey.setPressed(true);
+				IKeyBinding.get(MC.options.leftKey).resetPressedState();
+				IKeyBinding.get(MC.options.sneakKey).resetPressedState();
+			}else if((z >= -48 && z <= 143) && (x == 56 || x == 70 || x == 84
+				|| x == 98 || x == 112 || x == 126 || x == 140))
 			{
-				MC.options.attackKey.setPressed(true);
-				if(x < 47 || x > 143 || z < -48 || z > 143)
-				{
-					MC.inGameHud.getChatHud()
-						.addMessage(Text.of("X or Y are Bad!!!"));
-				}else if(y > 69 || y < 68)
-				{
-					MC.inGameHud.getChatHud()
-						.addMessage(Text.of("Y is Bad!!!"));
-				}
-				
-				if(x == 140 && z == -48)
-				{
-					MC.player.networkHandler.sendChatCommand("warp garden");
-					timer++;
-				}else if((z >= -48 && 142 >= z) && (x == 49 || x == 63
-					|| x == 77 || x == 91 || x == 105 || x == 119 || x == 133))
-				{
-					MC.options.rightKey.setPressed(true);
-					MC.options.forwardKey.setPressed(true);
-					IKeyBinding.get(MC.options.leftKey).resetPressedState();
-					IKeyBinding.get(MC.options.sneakKey).resetPressedState();
-				}else if((z >= -47 && 143 <= z) && (x == 56 || x == 70
-					|| x == 84 || x == 98 || x == 112 || x == 126 || x == 140))
-				{
-					MC.options.leftKey.setPressed(true);
-					MC.options.forwardKey.setPressed(true);
-					IKeyBinding.get(MC.options.rightKey).resetPressedState();
-					IKeyBinding.get(MC.options.sneakKey).resetPressedState();
-				}
+				MC.options.leftKey.setPressed(true);
+				MC.options.forwardKey.setPressed(true);
+				IKeyBinding.get(MC.options.rightKey).resetPressedState();
+				IKeyBinding.get(MC.options.sneakKey).resetPressedState();
 			}
 		}
 	}
