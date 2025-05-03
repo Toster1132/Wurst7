@@ -13,7 +13,6 @@ import java.util.stream.Stream;
 
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.wurstclient.Category;
@@ -87,16 +86,6 @@ public final class FightBotHack extends Hack
 	protected void onEnable()
 	{
 		// disable other killauras
-		WURST.getHax().aimAssistHack.setEnabled(false);
-		WURST.getHax().clickAuraHack.setEnabled(false);
-		WURST.getHax().crystalAuraHack.setEnabled(false);
-		WURST.getHax().killauraLegitHack.setEnabled(false);
-		WURST.getHax().killauraHack.setEnabled(false);
-		WURST.getHax().multiAuraHack.setEnabled(false);
-		WURST.getHax().protectHack.setEnabled(false);
-		WURST.getHax().triggerBotHack.setEnabled(false);
-		WURST.getHax().tpAuraHack.setEnabled(false);
-		WURST.getHax().tunnellerHack.setEnabled(false);
 		
 		pathFinder = new EntityPathFinder(MC.player);
 		
@@ -136,8 +125,6 @@ public final class FightBotHack extends Hack
 			.orElse(null);
 		if(entity == null)
 			return;
-		
-		WURST.getHax().autoSwordHack.setSlot(entity);
 		
 		if(useAi.isChecked())
 		{
@@ -179,9 +166,7 @@ public final class FightBotHack extends Hack
 				MC.player.addVelocity(0, 0.04, 0);
 			
 			// control height if flying
-			if(!MC.player.isOnGround()
-				&& (MC.player.getAbilities().flying
-					|| WURST.getHax().flightHack.isEnabled())
+			if(!MC.player.isOnGround() && (MC.player.getAbilities().flying)
 				&& MC.player.squaredDistanceTo(entity.getX(), MC.player.getY(),
 					entity.getZ()) <= MC.player.squaredDistanceTo(
 						MC.player.getX(), entity.getY(), MC.player.getZ()))
@@ -204,17 +189,15 @@ public final class FightBotHack extends Hack
 		}
 		
 		// check cooldown
-		if(!speed.isTimeToAttack())
+		if(MC.player.squaredDistanceTo(entity) > Math.pow(range.getValue(), 2))
 			return;
 		
 		// check range
 		if(MC.player.squaredDistanceTo(entity) > Math.pow(range.getValue(), 2))
 			return;
 		
-		// attack entity
-		MC.interactionManager.attackEntity(MC.player, entity);
-		swingHand.swing(Hand.MAIN_HAND);
-		speed.resetTimer();
+		// milk entity
+		MC.options.useKey.setPressed(true);
 	}
 	
 	@Override
