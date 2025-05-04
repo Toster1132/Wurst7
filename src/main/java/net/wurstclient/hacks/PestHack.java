@@ -44,7 +44,6 @@ public final class PestHack extends Hack implements UpdateListener
 	protected void onEnable()
 	{
 		EVENTS.add(UpdateListener.class, this);
-		swapHotbarSlots(0, 1);
 		setEnabled(false);
 		
 		// Send a command and press backKey

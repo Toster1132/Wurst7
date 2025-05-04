@@ -129,6 +129,7 @@ public final class hyMacroHack extends Hack implements UpdateListener
 				pestHack.setEnabled(false);
 				fightBotHack.setEnabled(true);
 				przejscieHack.setEnabled(true);
+				swapHotbarSlots(0, 1);
 				currentState = State.PESTHACK_PHASE;
 				stateStart = now;
 				notify("Switched to PESTHACK_PHASE.");
