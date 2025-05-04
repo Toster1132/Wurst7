@@ -8,16 +8,27 @@
 package net.wurstclient.hacks;
 
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.text.Text;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
 import net.wurstclient.mixinterface.IKeyBinding;
-import net.minecraft.text.Text;
 
 @SearchTags({"przejscie"})
 public final class PrzejscieHack extends Hack implements UpdateListener
 {
+	private static final int AFK_BUFFER_SIZE = 50;
+	private final BlockPos[] lastPositions = new BlockPos[AFK_BUFFER_SIZE];
+	private final float[] lastYaws = new float[AFK_BUFFER_SIZE];
+	private final float[] lastPitches = new float[AFK_BUFFER_SIZE];
+	private int afkIndex = 0;
+	private boolean afkDetected = false;
+	private boolean isMoving = false;
+	private long movementStartTime;
+	private static final int MOVEMENT_DURATION = 3_000;
+	private Runnable movementAction = null;
+	
 	public PrzejscieHack()
 	{
 		super("PrzejscieHack");
@@ -28,7 +39,6 @@ public final class PrzejscieHack extends Hack implements UpdateListener
 	protected void onEnable()
 	{
 		EVENTS.add(UpdateListener.class, this);
-		
 	}
 	
 	@Override
@@ -36,16 +46,6 @@ public final class PrzejscieHack extends Hack implements UpdateListener
 	{
 		EVENTS.remove(UpdateListener.class, this);
 	}
-	
-	private static final int AFK_BUFFER_SIZE = 150;
-	private final BlockPos[] lastPositions = new BlockPos[AFK_BUFFER_SIZE];
-	private final float[] lastYaws = new float[AFK_BUFFER_SIZE];
-	private final float[] lastPitches = new float[AFK_BUFFER_SIZE];
-	private int afkIndex = 0;
-	private boolean afkDetected = false;
-	private boolean isMoving = false;
-	private long movementStartTime;
-	private static final int MOVEMENT_DURATION = 5_000;
 	
 	@Override
 	public void onUpdate()
@@ -115,21 +115,57 @@ public final class PrzejscieHack extends Hack implements UpdateListener
 	{
 		isMoving = true;
 		movementStartTime = System.currentTimeMillis();
+		movementAction = decideMovementAction();
 	}
 	
 	private void stopMovementMacro()
 	{
-		isMoving = false;
 		IKeyBinding.get(MC.options.forwardKey).resetPressedState();
-		IKeyBinding.get(MC.options.rightKey).resetPressedState();
-		IKeyBinding.get(MC.options.leftKey).resetPressedState();
+		isMoving = false;
+		afkDetected = false;
+		movementAction = null;
+	}
+	
+	private void pitchYawForward(int yaw, int pitch)
+	{
+		MC.player.setYaw(yaw);
+		MC.player.setPitch(pitch);
+		MC.options.forwardKey.setPressed(true);
 	}
 	
 	private void performMovement()
 	{
-		// TUTAJ KURWA MACRO
-        MC.options.forwardKey.setPressed(true);
-		MC.options.rightKey.setPressed(true);
+		if(movementAction != null)
+			movementAction.run();
 	}
 	
+	private Runnable decideMovementAction()
+	{
+		int x = MC.player.getBlockX();
+		int z = MC.player.getBlockZ();
+		
+		if(x <= 140 && x >= 97)
+		{
+			if(z >= -48 && z <= 0)
+				return () -> pitchYawForward(90, 0); // zone 1
+			if(z >= 1 && z <= 48)
+				return () -> pitchYawForward(-180, 0); // zone 3
+			if(z >= 49 && z <= 96)
+				return () -> pitchYawForward(-180, 0); // zone 5
+			if(z >= 97 && z <= 143)
+				return () -> pitchYawForward(-180, 0); // zone 7
+		}else if(x <= 96 && x >= 49)
+		{
+			if(z >= -48 && z <= 0)
+				return () -> pitchYawForward(0, 0); // zone 2
+			if(z >= 1 && z <= 48)
+				return () -> pitchYawForward(0, 0); // zone 4
+			if(z >= 49 && z <= 96)
+				return () -> pitchYawForward(0, 0); // zone 6
+			if(z >= 97 && z <= 143)
+				return () -> pitchYawForward(-90, 0); // zone 8
+		}
+		
+		return () -> {}; // default: do nothing
+	}
 }
