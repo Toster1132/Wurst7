@@ -33,6 +33,8 @@ public final class HackList implements UpdateListener
 	public final PestHack pestHack = new PestHack();
 	public final PrzejscieHack przejscieHack = new PrzejscieHack();
 	
+	public final hyMacroHack hyMacroHack = new hyMacroHack();
+	
 	public final AimAssistHack aimAssistHack = new AimAssistHack();
 	public final AirPlaceHack airPlaceHack = new AirPlaceHack();
 	public final AnchorAuraHack anchorAuraHack = new AnchorAuraHack();
