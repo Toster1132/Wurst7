@@ -15,6 +15,7 @@ import net.wurstclient.hack.Hack;
 @SearchTags({"garden"})
 public final class GardenHack extends Hack implements UpdateListener
 {
+	
 	public GardenHack()
 	{
 		super("GardenHack");
@@ -36,5 +37,7 @@ public final class GardenHack extends Hack implements UpdateListener
 	
 	@Override
 	public void onUpdate()
-	{}
+	{
+		
+	}
 }

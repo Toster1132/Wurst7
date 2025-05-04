@@ -144,27 +144,31 @@ public final class PrzejscieHack extends Hack implements UpdateListener
 		int x = MC.player.getBlockX();
 		int z = MC.player.getBlockZ();
 		
-		if(x <= 140 && x >= 97)
+		if(x <= 135 && x >= 97)
 		{
-			if(z >= -48 && z <= 0)
+			if(z >= -52 && z <= 0)
 				return () -> pitchYawForward(90, 0); // zone 1
 			if(z >= 1 && z <= 48)
 				return () -> pitchYawForward(-180, 0); // zone 3
 			if(z >= 49 && z <= 96)
 				return () -> pitchYawForward(-180, 0); // zone 5
-			if(z >= 97 && z <= 143)
+			if(z >= 97 && z <= 138)
 				return () -> pitchYawForward(-180, 0); // zone 7
-		}else if(x <= 96 && x >= 49)
+		}else if(x <= 96 && x >= 52)
 		{
-			if(z >= -48 && z <= 0)
+			if(z >= -52 && z <= 0)
 				return () -> pitchYawForward(0, 0); // zone 2
 			if(z >= 1 && z <= 48)
 				return () -> pitchYawForward(0, 0); // zone 4
 			if(z >= 49 && z <= 96)
 				return () -> pitchYawForward(0, 0); // zone 6
-			if(z >= 97 && z <= 143)
+			if(z >= 97 && z <= 138)
 				return () -> pitchYawForward(-90, 0); // zone 8
-		}
+		}else if(x > 135 && x <= 140)
+			return () -> pitchYawForward(90, 0);
+		
+		else if(x >= 47 && x < 52)
+			return () -> pitchYawForward(-90, 0);
 		
 		return () -> {}; // default: do nothing
 	}
