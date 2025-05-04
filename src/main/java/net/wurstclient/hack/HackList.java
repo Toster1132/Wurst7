@@ -31,6 +31,7 @@ public final class HackList implements UpdateListener
 	public final FarmingSimHack farmingSimHack = new FarmingSimHack();
 	public final GardenHack gardenHack = new GardenHack();
 	public final PestHack pestHack = new PestHack();
+	public final PrzejscieHack przejscieHack = new PrzejscieHack();
 	
 	public final AimAssistHack aimAssistHack = new AimAssistHack();
 	public final AirPlaceHack airPlaceHack = new AirPlaceHack();
