@@ -18,7 +18,7 @@ import net.wurstclient.mixinterface.IKeyBinding;
 @SearchTags({"przejscie"})
 public final class PrzejscieHack extends Hack implements UpdateListener
 {
-	private static final int AFK_BUFFER_SIZE = 50;
+	private static final int AFK_BUFFER_SIZE = 25;
 	private final BlockPos[] lastPositions = new BlockPos[AFK_BUFFER_SIZE];
 	private final float[] lastYaws = new float[AFK_BUFFER_SIZE];
 	private final float[] lastPitches = new float[AFK_BUFFER_SIZE];

@@ -68,17 +68,17 @@ public final class FarmingSimHack extends Hack implements UpdateListener
 			&& now - gardenCooldownStart >= cooldown + randomExtra2)
 			gardenOnCooldown = false;
 		
-		if(y == 75 && !skyblockOnCooldown)
+		if(y == 75 && !skyblockOnCooldown) // magic const; hub y lvl
 		{
 			MC.player.networkHandler.sendChatCommand("skyblock");
 			skyblockOnCooldown = true;
 			skyblockCooldownStart = now;
-		}else if(y == 70 && !gardenOnCooldown)
+		}else if(y == 70 && !gardenOnCooldown) // magic const; skyblock hub y lvl
 		{
 			MC.player.networkHandler.sendChatCommand("warp garden");
 			gardenOnCooldown = true;
 			gardenCooldownStart = now;
-		}else if(y == 94 && !skyblockOnCooldown)
+		}else if(y == 94 && !skyblockOnCooldown) // magic const; hub y lvl
 		{
 			MC.player.networkHandler.sendChatCommand("skyblock");
 			skyblockOnCooldown = true;
