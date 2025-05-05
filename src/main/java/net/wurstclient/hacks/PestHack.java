@@ -7,7 +7,6 @@
  */
 package net.wurstclient.hacks;
 
-import net.minecraft.screen.slot.SlotActionType;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
 import net.wurstclient.events.UpdateListener;
@@ -16,23 +15,6 @@ import net.wurstclient.hack.Hack;
 @SearchTags({"pest"})
 public final class PestHack extends Hack implements UpdateListener
 {
-	
-	private void swapHotbarSlots(int slot1, int slot2)
-	{
-		if(MC.player == null || MC.interactionManager == null)
-			return;
-		
-		int invSlot1 = 36 + slot1;
-		int invSlot2 = 36 + slot2;
-		int syncId = MC.player.currentScreenHandler.syncId;
-		
-		MC.interactionManager.clickSlot(syncId, invSlot1, 0,
-			SlotActionType.PICKUP, MC.player);
-		MC.interactionManager.clickSlot(syncId, invSlot2, 0,
-			SlotActionType.PICKUP, MC.player);
-		MC.interactionManager.clickSlot(syncId, invSlot1, 0,
-			SlotActionType.PICKUP, MC.player);
-	}
 	
 	public PestHack()
 	{

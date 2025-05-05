@@ -121,7 +121,9 @@ public final class FightBotHack extends Hack
 	{
 		
 		long now = System.currentTimeMillis();
+		int x = MC.player.getBlockX();
 		int y = MC.player.getBlockY();
+		int z = MC.player.getBlockZ();
 		
 		int randomExtra = (int)(Math.random() * 901) + 100;
 		if(skyblockOnCooldown
@@ -132,12 +134,12 @@ public final class FightBotHack extends Hack
 		if(gardenOnCooldown
 			&& now - gardenCooldownStart >= cooldown + randomExtra2)
 			gardenOnCooldown = false;
-		if(y == 75 && !skyblockOnCooldown)
+		if(y == 75 && !skyblockOnCooldown && x != 48 && z != -47)  //  48 -47
 		{
 			MC.player.networkHandler.sendChatCommand("skyblock");
 			skyblockOnCooldown = true;
 			skyblockCooldownStart = now;
-		}else if(y == 70 && !gardenOnCooldown)
+		}else if(y == 70 && !gardenOnCooldown && x != 48 && z != -47)
 		{
 			MC.player.networkHandler.sendChatCommand("warp garden");
 			gardenOnCooldown = true;
