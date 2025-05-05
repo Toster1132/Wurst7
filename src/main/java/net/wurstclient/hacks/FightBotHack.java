@@ -134,7 +134,7 @@ public final class FightBotHack extends Hack
 		if(gardenOnCooldown
 			&& now - gardenCooldownStart >= cooldown + randomExtra2)
 			gardenOnCooldown = false;
-		if(y == 75 && !skyblockOnCooldown && x != 48 && z != -47)  //  48 -47
+		if(y == 75 && !skyblockOnCooldown && x != 48 && z != -47) // 48 -47
 		{
 			MC.player.networkHandler.sendChatCommand("skyblock");
 			skyblockOnCooldown = true;

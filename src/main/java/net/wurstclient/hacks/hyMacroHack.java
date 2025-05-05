@@ -179,7 +179,9 @@ public final class hyMacroHack extends Hack implements UpdateListener
 	
 	private void handleTeleportLogic()
 	{
+		int x = MC.player.getBlockX();
 		int y = MC.player.getBlockY();
+		int z = MC.player.getBlockZ();
 		long now = System.currentTimeMillis();
 		
 		int randSkyExtra = (int)(Math.random() * 901) + 100;
@@ -192,12 +194,12 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			&& now - gardenCooldownStart >= cooldown + randGardenExtra)
 			gardenOnCooldown = false;
 		
-		if(y == 75 && !skyblockOnCooldown)
+		if(y == 75 && !skyblockOnCooldown && x != 48 && z != -47)
 		{
 			MC.player.networkHandler.sendChatCommand("skyblock");
 			skyblockOnCooldown = true;
 			skyblockCooldownStart = now;
-		}else if(y == 70 && !gardenOnCooldown)
+		}else if(y == 70 && !gardenOnCooldown && x != 48 && z != -47)
 		{
 			MC.player.networkHandler.sendChatCommand("warp garden");
 			gardenOnCooldown = true;
