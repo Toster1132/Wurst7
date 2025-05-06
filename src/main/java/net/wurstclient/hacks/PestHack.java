@@ -25,11 +25,13 @@ public final class PestHack extends Hack implements UpdateListener
 	@Override
 	protected void onEnable()
 	{
-		// setEnabled(false);
+		EVENTS.add(UpdateListener.class, this);
+		setEnabled(false);
 		
 		// Send a command and press backKey
 		MC.player.networkHandler.sendChatCommand("warp garden");
-		EVENTS.add(UpdateListener.class, this);
+		MC.options.backKey.setPressed(true);
+		// backKey was pressed
 	}
 	
 	@Override

@@ -31,14 +31,14 @@ public final class hyMacroHack extends Hack implements UpdateListener
 		FARMING
 	}
 	
-	private static final long PEST_DURATION = 6_500L;
+	private static final long PEST_DURATION = 4_000L;
 	private static final long PESTHACK_DURATION = 60_000L;
 	private static final long FARMING_DURATION = 13 * 60_000L + 40_000L;
 	
 	private State currentState;
 	private long stateStart;
 	
-	private final int cooldown = 7000;
+	private final int cooldown = 5000;
 	private long skyblockCooldownStart = 0;
 	private long gardenCooldownStart = 0;
 	private boolean skyblockOnCooldown = false;
@@ -98,6 +98,23 @@ public final class hyMacroHack extends Hack implements UpdateListener
 		notify("Disabled hyMacroHack.");
 	}
 	
+	public boolean isLookingAtOakSign()
+	{
+		MinecraftClient client = MinecraftClient.getInstance();
+		
+		if(client.player == null || client.world == null
+			|| client.crosshairTarget == null)
+			return false;
+		
+		if(client.crosshairTarget.getType() != HitResult.Type.BLOCK)
+			return false;
+		
+		BlockPos pos = ((BlockHitResult)client.crosshairTarget).getBlockPos();
+		BlockState state = client.world.getBlockState(pos);
+		
+		return state.isOf(Blocks.OAK_SIGN) || state.isOf(Blocks.OAK_WALL_SIGN);
+	}
+	
 	private void swapHotbarSlots(int slot1, int slot2)
 	{
 		if(MC.player == null || MC.interactionManager == null)
@@ -138,8 +155,7 @@ public final class hyMacroHack extends Hack implements UpdateListener
 				swapHotbarSlots(0, 1);
 				currentState = State.PESTHACK_PHASE;
 				stateStart = now;
-				notify("Switched to PEST.");
-				
+				notify("Switched to PESTHACK_PHASE.");
 			}
 			break;
 			
@@ -169,7 +185,7 @@ public final class hyMacroHack extends Hack implements UpdateListener
 				pestHack.setEnabled(true);
 				currentState = State.PEST;
 				stateStart = now;
-				notify("Switched to MOVING TO PEST.");
+				notify("Switched to PEST.");
 			}
 			break;
 		}
@@ -182,23 +198,6 @@ public final class hyMacroHack extends Hack implements UpdateListener
 		MC.options.backKey.setPressed(false);
 		MC.options.leftKey.setPressed(false);
 		MC.options.rightKey.setPressed(false);
-	}
-	
-	public boolean isLookingAtOakSign()
-	{
-		MinecraftClient client = MinecraftClient.getInstance();
-		
-		if(client.player == null || client.world == null
-			|| client.crosshairTarget == null)
-			return false;
-		
-		if(client.crosshairTarget.getType() != HitResult.Type.BLOCK)
-			return false;
-		
-		BlockPos pos = ((BlockHitResult)client.crosshairTarget).getBlockPos();
-		BlockState state = client.world.getBlockState(pos);
-		
-		return state.isOf(Blocks.OAK_SIGN) || state.isOf(Blocks.OAK_WALL_SIGN);
 	}
 	
 	private void handleTeleportLogic()
