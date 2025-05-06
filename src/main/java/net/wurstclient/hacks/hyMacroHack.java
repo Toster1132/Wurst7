@@ -7,13 +7,19 @@
  */
 package net.wurstclient.hacks;
 
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.text.Text;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
 import net.wurstclient.WurstClient;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
+import net.minecraft.client.MinecraftClient;
 
 @SearchTags({"macro", "garden", "skyblock"})
 public final class hyMacroHack extends Hack implements UpdateListener
@@ -25,14 +31,14 @@ public final class hyMacroHack extends Hack implements UpdateListener
 		FARMING
 	}
 	
-	private static final long PEST_DURATION = 6_000L;
+	private static final long PEST_DURATION = 6_500L;
 	private static final long PESTHACK_DURATION = 60_000L;
 	private static final long FARMING_DURATION = 13 * 60_000L + 40_000L;
 	
 	private State currentState;
 	private long stateStart;
 	
-	private final int cooldown = 5000;
+	private final int cooldown = 7000;
 	private long skyblockCooldownStart = 0;
 	private long gardenCooldownStart = 0;
 	private boolean skyblockOnCooldown = false;
@@ -132,7 +138,8 @@ public final class hyMacroHack extends Hack implements UpdateListener
 				swapHotbarSlots(0, 1);
 				currentState = State.PESTHACK_PHASE;
 				stateStart = now;
-				notify("Switched to PESTHACK_PHASE.");
+				notify("Switched to PEST.");
+				
 			}
 			break;
 			
@@ -162,7 +169,7 @@ public final class hyMacroHack extends Hack implements UpdateListener
 				pestHack.setEnabled(true);
 				currentState = State.PEST;
 				stateStart = now;
-				notify("Switched to PEST.");
+				notify("Switched to MOVING TO PEST.");
 			}
 			break;
 		}
@@ -175,6 +182,23 @@ public final class hyMacroHack extends Hack implements UpdateListener
 		MC.options.backKey.setPressed(false);
 		MC.options.leftKey.setPressed(false);
 		MC.options.rightKey.setPressed(false);
+	}
+	
+	public boolean isLookingAtOakSign()
+	{
+		MinecraftClient client = MinecraftClient.getInstance();
+		
+		if(client.player == null || client.world == null
+			|| client.crosshairTarget == null)
+			return false;
+		
+		if(client.crosshairTarget.getType() != HitResult.Type.BLOCK)
+			return false;
+		
+		BlockPos pos = ((BlockHitResult)client.crosshairTarget).getBlockPos();
+		BlockState state = client.world.getBlockState(pos);
+		
+		return state.isOf(Blocks.OAK_SIGN) || state.isOf(Blocks.OAK_WALL_SIGN);
 	}
 	
 	private void handleTeleportLogic()
@@ -194,7 +218,7 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			&& now - gardenCooldownStart >= cooldown + randGardenExtra)
 			gardenOnCooldown = false;
 		
-		if(y == 75 && !skyblockOnCooldown && x != 48 && z != -47)
+		if((y == 75 || y == 94) && !skyblockOnCooldown && x != 48 && z != -47)
 		{
 			MC.player.networkHandler.sendChatCommand("skyblock");
 			skyblockOnCooldown = true;
@@ -204,6 +228,11 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			MC.player.networkHandler.sendChatCommand("warp garden");
 			gardenOnCooldown = true;
 			gardenCooldownStart = now;
+		}else if(y == 31 && isLookingAtOakSign() && !skyblockOnCooldown)
+		{
+			MC.player.networkHandler.sendChatCommand("l skyblock");
+			skyblockOnCooldown = true;
+			skyblockCooldownStart = now;
 		}
 	}
 	
