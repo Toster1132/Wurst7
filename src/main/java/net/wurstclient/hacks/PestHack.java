@@ -30,7 +30,7 @@ public final class PestHack extends Hack implements UpdateListener
 		setEnabled(false);
 		
 		// Send a command and press backKey
-  
+  start = System.currentTimeMillis();
 		MC.player.networkHandler.sendChatCommand("warp garden");
 	}
 	
@@ -46,7 +46,7 @@ public final class PestHack extends Hack implements UpdateListener
 	public void onUpdate()
 	{
 
-if(nowMilins > start + cnt)
+if(System.currentTimeMillis() > start + cnt)
 {
 		MC.options.backKey.setPressed(true);
 }
