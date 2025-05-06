@@ -21,17 +21,12 @@ public final class PestHack extends Hack implements UpdateListener
 		super("PestHack");
 		setCategory(Category.MOVEMENT);
 	}
-	
-	private long start = 0;
-	private long cnt = 1_500;
-	
 	@Override
 	protected void onEnable()
 	{
 		// setEnabled(false);
 		
 		// Send a command and press backKey
-		start = System.currentTimeMillis();
 		MC.player.networkHandler.sendChatCommand("warp garden");
 		EVENTS.add(UpdateListener.class, this);
 	}
@@ -47,10 +42,5 @@ public final class PestHack extends Hack implements UpdateListener
 	@Override
 	public void onUpdate()
 	{
-		
-		if(System.currentTimeMillis() >= start + cnt)
-		{
-			MC.options.backKey.setPressed(true);
-		}
 	}
 }
