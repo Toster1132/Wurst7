@@ -46,7 +46,7 @@ public final class PestHack extends Hack implements UpdateListener
 	public void onUpdate()
 	{
 
-if(System.currentTimeMillis() > start + cnt)
+if(System.currentTimeMillis() >= start + cnt)
 {
 		MC.options.backKey.setPressed(true);
 }
