@@ -21,6 +21,7 @@ public final class PestHack extends Hack implements UpdateListener
 		super("PestHack");
 		setCategory(Category.MOVEMENT);
 	}
+	
 	@Override
 	protected void onEnable()
 	{
@@ -41,6 +42,5 @@ public final class PestHack extends Hack implements UpdateListener
 	
 	@Override
 	public void onUpdate()
-	{
-	}
+	{}
 }
