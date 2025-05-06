@@ -25,7 +25,7 @@ public final class hyMacroHack extends Hack implements UpdateListener
 		FARMING
 	}
 	
-	private static final long PEST_DURATION = 4_000L;
+	private static final long PEST_DURATION = 6_000L;
 	private static final long PESTHACK_DURATION = 60_000L;
 	private static final long FARMING_DURATION = 13 * 60_000L + 40_000L;
 	
