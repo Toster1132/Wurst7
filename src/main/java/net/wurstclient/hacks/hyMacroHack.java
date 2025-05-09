@@ -26,17 +26,22 @@ public final class hyMacroHack extends Hack implements UpdateListener
 {
 	private enum State
 	{
-		PEST,
-		PESTHACK_PHASE,
-		FARMING
+		PRZEJSCIE,
+		PEST_KILL,
+		WARP_GARDEN,
+		FARM,
+		STASH
 	}
 	
-	private static final long PEST_DURATION = 4_000L;
-	private static final long PESTHACK_DURATION = 60_000L;
-	private static final long FARMING_DURATION = 13 * 60_000L + 40_000L;
+	private static final long PRZEJSCIE_SEC = 4_000L;
+	private static final long PEST_KILL_SEC = 60_000L;
+	private static final long FARM_SEC = 13 * 60_000L + 40_000L;
+	private static final long STASH_SEC = 60_000L * 120;
+	private static final long STASH_DURATION_SEC = 30_000L;
 	
 	private State currentState;
 	private long stateStart;
+	private long LONG_ELAPSED;
 	
 	private final int cooldown = 5000;
 	private long skyblockCooldownStart = 0;
@@ -51,6 +56,7 @@ public final class hyMacroHack extends Hack implements UpdateListener
 	private FarmingSimHack farmingSimHack;
 	private AutoSprintHack autoSprintHack;
 	private AutoReconnectHack autoReconnectHack;
+	private stashHack stashHack;
 	
 	public hyMacroHack()
 	{
@@ -61,6 +67,141 @@ public final class hyMacroHack extends Hack implements UpdateListener
 	@Override
 	protected void onEnable()
 	{
+		hyEnable();
+	}
+	
+	@Override
+	protected void onDisable()
+	{
+		hyDisable();
+	}
+	
+	@Override
+	public void onUpdate()
+	{
+		if(MC.player == null)
+			return;
+		handleTeleportLogic();
+		
+		long now = System.currentTimeMillis();
+		long elapsed = now - stateStart;
+		
+		switch(currentState)
+		{
+			case PEST_KILL:
+			if(elapsed >= PRZEJSCIE_SEC)
+			{
+				if(LONG_ELAPSED >= STASH_SEC)
+				{
+					currentState = State.STASH;
+					return;
+				}
+				resetKeys();
+				pestHack.setEnabled(false);
+				fightBotHack.setEnabled(true);
+				przejscieHack.setEnabled(true);
+				swapHotbarSlots(0, 1);
+				
+				currentState = State.WARP_GARDEN;
+				stateStart = now;
+				notify("Set to WARP_GARDEN state.");
+			}
+			break;
+			case WARP_GARDEN:
+			if(elapsed >= PEST_KILL_SEC)
+			{
+				if(LONG_ELAPSED >= STASH_SEC)
+				{
+					currentState = State.STASH;
+					return;
+				}
+				przejscieHack.setEnabled(false);
+				fightBotHack.setEnabled(false);
+				
+				gardenHack.setEnabled(true);
+				
+				currentState = State.FARM;
+				stateStart = now;
+				notify("Set to FARM state.");
+			}
+			break;
+			case FARM:
+			
+			gardenHack.setEnabled(false);
+			swapHotbarSlots(0, 1);
+			
+			farmingSimHack.startFarming();
+			
+			currentState = State.PRZEJSCIE;
+			stateStart = now;
+			notify("Set to FARM state");
+			
+			break;
+			case PRZEJSCIE:
+			if(elapsed >= FARM_SEC)
+			{
+				if(LONG_ELAPSED >= STASH_SEC)
+				{
+					currentState = State.STASH;
+					return;
+				}
+				resetKeys();
+				farmingSimHack.stopFarming();
+				pestHack.setEnabled(true);
+				currentState = State.PEST_KILL;
+				stateStart = now;
+				notify("Set to PRZEJSCIE state");
+				
+			}
+			break;
+			case STASH:
+			notify("Set to STASH state.");
+			resetKeys();
+			stashHack.setEnabled(true);
+			
+			pestHack.setEnabled(false);
+			przejscieHack.setEnabled(false);
+			fightBotHack.setEnabled(false);
+			gardenHack.setEnabled(false);
+			farmingSimHack.stopFarming();
+			autoSprintHack.setEnabled(false);
+			autoReconnectHack.setEnabled(false);
+			
+			if(elapsed >= STASH_DURATION_SEC)
+			{
+				resetKeys();
+				stashHack.setEnabled(false);
+				przejscieHack.setEnabled(false);
+				fightBotHack.setEnabled(false);
+				
+				gardenHack.setEnabled(true);
+				
+				currentState = State.FARM;
+				stateStart = now;
+				notify("Set to FARM state.");
+			}
+			break;
+		}
+		
+	}
+	
+	private void hyDisable()
+	{
+		EVENTS.remove(UpdateListener.class, this);
+		resetKeys();
+		stashHack.setEnabled(false);
+		pestHack.setEnabled(false);
+		przejscieHack.setEnabled(false);
+		fightBotHack.setEnabled(false);
+		gardenHack.setEnabled(false);
+		farmingSimHack.stopFarming();
+		autoSprintHack.setEnabled(false);
+		autoReconnectHack.setEnabled(false);
+		notify("Disabled hyMacro.");
+	}
+	
+	private void hyEnable()
+	{
 		resetKeys();
 		
 		pestHack = WurstClient.INSTANCE.getHax().pestHack;
@@ -70,35 +211,20 @@ public final class hyMacroHack extends Hack implements UpdateListener
 		farmingSimHack = WurstClient.INSTANCE.getHax().farmingSimHack;
 		autoReconnectHack = WurstClient.INSTANCE.getHax().autoReconnectHack;
 		autoSprintHack = WurstClient.INSTANCE.getHax().autoSprintHack;
+		stashHack = WurstClient.INSTANCE.getHax().stashHack;
 		
 		autoReconnectHack.setEnabled(true);
 		autoSprintHack.setEnabled(true);
 		
-		currentState = State.PEST;
+		currentState = State.PEST_KILL;
 		stateStart = System.currentTimeMillis();
 		pestHack.setEnabled(true);
 		
 		EVENTS.add(UpdateListener.class, this);
-		notify("Started in PEST state.");
+		notify("Set to PRZEJSCIE state.");
 	}
 	
-	@Override
-	protected void onDisable()
-	{
-		EVENTS.remove(UpdateListener.class, this);
-		resetKeys();
-		
-		pestHack.setEnabled(false);
-		przejscieHack.setEnabled(false);
-		fightBotHack.setEnabled(false);
-		gardenHack.setEnabled(false);
-		farmingSimHack.stopFarming();
-		autoSprintHack.setEnabled(false);
-		autoReconnectHack.setEnabled(false);
-		notify("Disabled hyMacroHack.");
-	}
-	
-	public boolean isLookingAtOakSign()
+	private boolean isLookingAtOakSign()
 	{
 		MinecraftClient client = MinecraftClient.getInstance();
 		
@@ -132,65 +258,6 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			SlotActionType.PICKUP, MC.player);
 	}
 	
-	@Override
-	public void onUpdate()
-	{
-		if(MC.player == null)
-			return;
-		
-		handleTeleportLogic();
-		
-		long now = System.currentTimeMillis();
-		long elapsed = now - stateStart;
-		
-		switch(currentState)
-		{
-			case PEST:
-			if(elapsed >= PEST_DURATION)
-			{
-				resetKeys();
-				pestHack.setEnabled(false);
-				fightBotHack.setEnabled(true);
-				przejscieHack.setEnabled(true);
-				swapHotbarSlots(0, 1);
-				currentState = State.PESTHACK_PHASE;
-				stateStart = now;
-				notify("Switched to PESTHACK_PHASE.");
-			}
-			break;
-			
-			case PESTHACK_PHASE:
-			if(elapsed >= PESTHACK_DURATION)
-			{
-				przejscieHack.setEnabled(false);
-				fightBotHack.setEnabled(false);
-				
-				// Restart garden hack cleanly
-				gardenHack.setEnabled(false);
-				gardenHack.setEnabled(true);
-				swapHotbarSlots(0, 1);
-				farmingSimHack.startFarming();
-				
-				currentState = State.FARMING;
-				stateStart = now;
-				notify("Switched to FARMING.");
-			}
-			break;
-			
-			case FARMING:
-			if(elapsed >= FARMING_DURATION)
-			{
-				resetKeys();
-				farmingSimHack.stopFarming();
-				pestHack.setEnabled(true);
-				currentState = State.PEST;
-				stateStart = now;
-				notify("Switched to PEST.");
-			}
-			break;
-		}
-	}
-	
 	private void resetKeys()
 	{
 		MC.options.attackKey.setPressed(false);
@@ -207,28 +274,35 @@ public final class hyMacroHack extends Hack implements UpdateListener
 		int z = MC.player.getBlockZ();
 		long now = System.currentTimeMillis();
 		
+		// to not trigger limbo
 		int randSkyExtra = (int)(Math.random() * 901) + 100;
 		if(skyblockOnCooldown
 			&& now - skyblockCooldownStart >= cooldown + randSkyExtra)
 			skyblockOnCooldown = false;
-		
 		int randGardenExtra = (int)(Math.random() * 901) + 100;
 		if(gardenOnCooldown
 			&& now - gardenCooldownStart >= cooldown + randGardenExtra)
 			gardenOnCooldown = false;
 		
-		if((y == 75 || y == 94) && !skyblockOnCooldown && x != 48 && z != -47)
-		{
+		// statements
+		if((y == 75 || y == 94) && !skyblockOnCooldown && (z <= 5 && z >= -5)
+			&& ((x <= 15 && x >= 5) || (x >= -58 && x <= -45)))
+		{ // lobby hypixel
 			MC.player.networkHandler.sendChatCommand("skyblock");
 			skyblockOnCooldown = true;
 			skyblockCooldownStart = now;
-		}else if(y == 70 && !gardenOnCooldown && x != 48 && z != -47)
-		{
+			// -3 -70
+		}else if(y == 70 && !gardenOnCooldown && (x <= 5 && x >= -7)
+			&& (z >= -76 && z <= -62))
+		{ // hub
 			MC.player.networkHandler.sendChatCommand("warp garden");
 			gardenOnCooldown = true;
 			gardenCooldownStart = now;
+			hyDisable();
+			hyEnable();
+			currentState = State.FARM;
 		}else if(y == 31 && isLookingAtOakSign() && !skyblockOnCooldown)
-		{
+		{ // limbo
 			MC.player.networkHandler.sendChatCommand("l skyblock");
 			skyblockOnCooldown = true;
 			skyblockCooldownStart = now;
@@ -237,7 +311,6 @@ public final class hyMacroHack extends Hack implements UpdateListener
 	
 	private void notify(String message)
 	{
-		MC.inGameHud.getChatHud()
-			.addMessage(Text.of("[hyMacroHack] " + message));
+		MC.inGameHud.getChatHud().addMessage(Text.of("[hyMacro] " + message));
 	}
 }

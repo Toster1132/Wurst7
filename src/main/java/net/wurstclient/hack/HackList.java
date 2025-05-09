@@ -32,6 +32,7 @@ public final class HackList implements UpdateListener
 	public final GardenHack gardenHack = new GardenHack();
 	public final PestHack pestHack = new PestHack();
 	public final PrzejscieHack przejscieHack = new PrzejscieHack();
+	public final stashHack stashHack = new stashHack();
 	
 	public final hyMacroHack hyMacroHack = new hyMacroHack();
 	
