@@ -9,11 +9,10 @@ package net.wurstclient.hacks;
 
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
-import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
 
 @SearchTags({"garden"})
-public final class GardenHack extends Hack implements UpdateListener
+public final class GardenHack extends Hack
 {
 	
 	public GardenHack()
@@ -25,19 +24,6 @@ public final class GardenHack extends Hack implements UpdateListener
 	@Override
 	protected void onEnable()
 	{
-		EVENTS.add(UpdateListener.class, this);
 		MC.player.networkHandler.sendChatCommand("warp garden");
-	}
-	
-	@Override
-	protected void onDisable()
-	{
-		EVENTS.remove(UpdateListener.class, this);
-	}
-	
-	@Override
-	public void onUpdate()
-	{
-		
 	}
 }

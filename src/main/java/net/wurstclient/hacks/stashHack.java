@@ -40,6 +40,7 @@ public final class stashHack extends Hack implements UpdateListener
 	protected void onDisable()
 	{
 		EVENTS.remove(UpdateListener.class, this);
+		MinecraftClient.getInstance().setScreen(null);
 	}
 	
 	boolean hasOpenedStorage = false;
@@ -71,7 +72,6 @@ public final class stashHack extends Hack implements UpdateListener
 		int playerInvStart = chestSlotCount;
 		int hotbarStart = totalSlots - 9;
 		
-		// Step 1: Click chest slot 27 if it exists
 		if(!clickedSlot27)
 		{
 			if(chestSlotCount > 27)
@@ -84,7 +84,6 @@ public final class stashHack extends Hack implements UpdateListener
 			return;
 		}
 		
-		// Step 2: Shift-click 27 inventory slots (excluding hotbar)
 		if(!overclicked)
 		{
 			int currentSlot = playerInvStart + slot;
@@ -96,7 +95,6 @@ public final class stashHack extends Hack implements UpdateListener
 				start = now;
 			}else
 			{
-				MinecraftClient.getInstance().setScreen(null);
 				overclicked = true;
 			}
 		}

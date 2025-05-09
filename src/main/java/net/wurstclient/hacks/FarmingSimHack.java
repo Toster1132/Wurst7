@@ -48,9 +48,8 @@ public final class FarmingSimHack extends Hack implements UpdateListener
 	
 	public void startFarming()
 	{
-		this.setEnabled(true); // Activate the hack
-		swapHotbarSlots(0, 1); // Optional: Swap items in the hotbar (comment
-								// out if problematic)
+		this.setEnabled(true);
+		swapHotbarSlots(0, 1);
 	}
 	
 	public void stopFarming()
@@ -60,7 +59,7 @@ public final class FarmingSimHack extends Hack implements UpdateListener
 		IKeyBinding.get(MC.options.backKey).resetPressedState();
 		IKeyBinding.get(MC.options.leftKey).resetPressedState();
 		IKeyBinding.get(MC.options.rightKey).resetPressedState();
-		this.setEnabled(false); // Optional: Disable the hack cleanly
+		this.setEnabled(false);
 	}
 	
 	private void swapHotbarSlots(int slot1, int slot2)

@@ -37,17 +37,19 @@ public final class hyMacroHack extends Hack implements UpdateListener
 	private static final long PEST_KILL_SEC = 60_000L;
 	private static final long FARM_SEC = 13 * 60_000L + 40_000L;
 	private static final long STASH_SEC = 60_000L * 120;
-	private static final long STASH_DURATION_SEC = 30_000L;
+	private static final long STASH_DURATION_SEC = 20_000L;
 	
 	private State currentState;
 	private long stateStart;
-	private long LONG_ELAPSED;
+	private long elapsed;
+	private long now;
 	
-	private final int cooldown = 5000;
+	private final int COOLDOWN = 5000;
 	private long skyblockCooldownStart = 0;
 	private long gardenCooldownStart = 0;
 	private boolean skyblockOnCooldown = false;
 	private boolean gardenOnCooldown = false;
+	private boolean stashed = false;
 	
 	private PestHack pestHack;
 	private PrzejscieHack przejscieHack;
@@ -83,17 +85,18 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			return;
 		handleTeleportLogic();
 		
-		long now = System.currentTimeMillis();
-		long elapsed = now - stateStart;
+		now = System.currentTimeMillis();
+		elapsed = now - stateStart;
 		
 		switch(currentState)
 		{
 			case PEST_KILL:
 			if(elapsed >= PRZEJSCIE_SEC)
 			{
-				if(LONG_ELAPSED >= STASH_SEC)
+				if(elapsed >= STASH_SEC)
 				{
 					currentState = State.STASH;
+					stateStart = now;
 					return;
 				}
 				resetKeys();
@@ -110,9 +113,10 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			case WARP_GARDEN:
 			if(elapsed >= PEST_KILL_SEC)
 			{
-				if(LONG_ELAPSED >= STASH_SEC)
+				if(elapsed >= STASH_SEC)
 				{
 					currentState = State.STASH;
+					stateStart = now;
 					return;
 				}
 				przejscieHack.setEnabled(false);
@@ -140,7 +144,7 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			case PRZEJSCIE:
 			if(elapsed >= FARM_SEC)
 			{
-				if(LONG_ELAPSED >= STASH_SEC)
+				if(elapsed >= STASH_SEC)
 				{
 					currentState = State.STASH;
 					return;
@@ -155,18 +159,21 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			}
 			break;
 			case STASH:
-			notify("Set to STASH state.");
-			resetKeys();
-			stashHack.setEnabled(true);
-			
-			pestHack.setEnabled(false);
-			przejscieHack.setEnabled(false);
-			fightBotHack.setEnabled(false);
-			gardenHack.setEnabled(false);
-			farmingSimHack.stopFarming();
-			autoSprintHack.setEnabled(false);
-			autoReconnectHack.setEnabled(false);
-			
+			if(!stashed)
+			{
+				notify("Set to STASH state.");
+				resetKeys();
+				stashHack.setEnabled(true);
+				
+				pestHack.setEnabled(false);
+				przejscieHack.setEnabled(false);
+				fightBotHack.setEnabled(false);
+				gardenHack.setEnabled(false);
+				farmingSimHack.stopFarming();
+				autoSprintHack.setEnabled(false);
+				autoReconnectHack.setEnabled(false);
+				stashed = true;
+			}
 			if(elapsed >= STASH_DURATION_SEC)
 			{
 				resetKeys();
@@ -175,8 +182,9 @@ public final class hyMacroHack extends Hack implements UpdateListener
 				fightBotHack.setEnabled(false);
 				
 				gardenHack.setEnabled(true);
-				
+				swapHotbarSlots(0, 1);
 				currentState = State.FARM;
+				stashed = false;
 				stateStart = now;
 				notify("Set to FARM state.");
 			}
@@ -277,11 +285,11 @@ public final class hyMacroHack extends Hack implements UpdateListener
 		// to not trigger limbo
 		int randSkyExtra = (int)(Math.random() * 901) + 100;
 		if(skyblockOnCooldown
-			&& now - skyblockCooldownStart >= cooldown + randSkyExtra)
+			&& now - skyblockCooldownStart >= COOLDOWN + randSkyExtra)
 			skyblockOnCooldown = false;
 		int randGardenExtra = (int)(Math.random() * 901) + 100;
 		if(gardenOnCooldown
-			&& now - gardenCooldownStart >= cooldown + randGardenExtra)
+			&& now - gardenCooldownStart >= COOLDOWN + randGardenExtra)
 			gardenOnCooldown = false;
 		
 		// statements

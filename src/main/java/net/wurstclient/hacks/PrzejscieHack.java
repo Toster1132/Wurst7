@@ -170,6 +170,6 @@ public final class PrzejscieHack extends Hack implements UpdateListener
 		else if(x >= 47 && x < 52)
 			return () -> pitchYawForward(-90, 0);
 		
-		return () -> {}; // default: do nothing
+		return () -> {};
 	}
 }
