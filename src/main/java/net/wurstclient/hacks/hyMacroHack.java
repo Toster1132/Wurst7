@@ -292,9 +292,9 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			skyblockOnCooldown = true;
 			skyblockCooldownStart = now;
 			// -3 -70
-		}else if(y == 70 && !gardenOnCooldown && (x <= 5 && x >= -7)
-			&& (z >= -76 && z <= -62))
-		{ // hub
+		}else if((y == 70 && !gardenOnCooldown && (x <= 5 && x >= -7)
+			&& (z >= -76 && z <= -62)) || (y == 100 && !gardenOnCooldown))
+		{ // hub or home island
 			MC.player.networkHandler.sendChatCommand("warp garden");
 			gardenOnCooldown = true;
 			gardenCooldownStart = now;
