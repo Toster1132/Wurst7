@@ -20,6 +20,9 @@ import net.wurstclient.hack.Hack;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 
 @SearchTags({"macro", "garden", "skyblock"})
 public final class hyMacroHack extends Hack implements UpdateListener
@@ -36,7 +39,6 @@ public final class hyMacroHack extends Hack implements UpdateListener
 	private static final long PRZEJSCIE_SEC = 4_000L;
 	private static final long PEST_KILL_SEC = 60_000L;
 	private static final long FARM_SEC = 13 * 60_000L + 40_000L;
-	private static final long STASH_SEC = 60_000L * 120;
 	private static final long STASH_DURATION_SEC = 20_000L;
 	
 	private State currentState;
@@ -49,7 +51,6 @@ public final class hyMacroHack extends Hack implements UpdateListener
 	private long gardenCooldownStart = 0;
 	private boolean skyblockOnCooldown = false;
 	private boolean gardenOnCooldown = false;
-	private boolean stashed = false;
 	
 	private PestHack pestHack;
 	private PrzejscieHack przejscieHack;
@@ -93,17 +94,11 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			case PEST_KILL:
 			if(elapsed >= PRZEJSCIE_SEC)
 			{
-				if(elapsed >= STASH_SEC)
-				{
-					currentState = State.STASH;
-					stateStart = now;
-					return;
-				}
 				resetKeys();
 				pestHack.setEnabled(false);
 				fightBotHack.setEnabled(true);
 				przejscieHack.setEnabled(true);
-				swapHotbarSlots(0, 1);
+				swapHotbarSlotsVacuum(0, 1);
 				
 				currentState = State.WARP_GARDEN;
 				stateStart = now;
@@ -113,12 +108,6 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			case WARP_GARDEN:
 			if(elapsed >= PEST_KILL_SEC)
 			{
-				if(elapsed >= STASH_SEC)
-				{
-					currentState = State.STASH;
-					stateStart = now;
-					return;
-				}
 				przejscieHack.setEnabled(false);
 				fightBotHack.setEnabled(false);
 				
@@ -132,25 +121,31 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			case FARM:
 			
 			gardenHack.setEnabled(false);
-			swapHotbarSlots(0, 1);
+			swapHotbarSlotsDicer(0, 1);
 			
 			farmingSimHack.startFarming();
 			
-			currentState = State.PRZEJSCIE;
+			currentState = State.STASH;
 			stateStart = now;
 			notify("Set to FARM state");
 			
 			break;
-			case PRZEJSCIE:
+			case STASH:
 			if(elapsed >= FARM_SEC)
 			{
-				if(elapsed >= STASH_SEC)
-				{
-					currentState = State.STASH;
-					return;
-				}
 				resetKeys();
 				farmingSimHack.stopFarming();
+				stashHack.setEnabled(true);
+				
+				currentState = State.PRZEJSCIE;
+				stateStart = now;
+				notify("Set to STASH state");
+			}
+			break;
+			case PRZEJSCIE:
+			if(elapsed >= STASH_DURATION_SEC)
+			{
+				stashHack.setEnabled(false);
 				pestHack.setEnabled(true);
 				currentState = State.PEST_KILL;
 				stateStart = now;
@@ -158,37 +153,7 @@ public final class hyMacroHack extends Hack implements UpdateListener
 				
 			}
 			break;
-			case STASH:
-			if(!stashed)
-			{
-				notify("Set to STASH state.");
-				resetKeys();
-				stashHack.setEnabled(true);
-				
-				pestHack.setEnabled(false);
-				przejscieHack.setEnabled(false);
-				fightBotHack.setEnabled(false);
-				gardenHack.setEnabled(false);
-				farmingSimHack.stopFarming();
-				autoSprintHack.setEnabled(false);
-				autoReconnectHack.setEnabled(false);
-				stashed = true;
-			}
-			if(elapsed >= STASH_DURATION_SEC)
-			{
-				resetKeys();
-				stashHack.setEnabled(false);
-				przejscieHack.setEnabled(false);
-				fightBotHack.setEnabled(false);
-				
-				gardenHack.setEnabled(true);
-				swapHotbarSlots(0, 1);
-				currentState = State.FARM;
-				stashed = false;
-				stateStart = now;
-				notify("Set to FARM state.");
-			}
-			break;
+			
 		}
 		
 	}
@@ -249,21 +214,54 @@ public final class hyMacroHack extends Hack implements UpdateListener
 		return state.isOf(Blocks.OAK_SIGN) || state.isOf(Blocks.OAK_WALL_SIGN);
 	}
 	
-	private void swapHotbarSlots(int slot1, int slot2)
+	private void swapHotbarSlotsVacuum(int slot1, int slot2)
 	{
 		if(MC.player == null || MC.interactionManager == null)
 			return;
 		
-		int invSlot1 = 36 + slot1;
-		int invSlot2 = 36 + slot2;
-		int syncId = MC.player.currentScreenHandler.syncId;
+		MinecraftClient client = MinecraftClient.getInstance();
+		ItemStack stack = client.player.getMainHandStack();
+		Item item = stack.getItem();
 		
-		MC.interactionManager.clickSlot(syncId, invSlot1, 0,
-			SlotActionType.PICKUP, MC.player);
-		MC.interactionManager.clickSlot(syncId, invSlot2, 0,
-			SlotActionType.PICKUP, MC.player);
-		MC.interactionManager.clickSlot(syncId, invSlot1, 0,
-			SlotActionType.PICKUP, MC.player);
+		if(item != Items.MINECART || item != Items.TNT_MINECART
+			|| item != Items.CHEST_MINECART)
+		{
+			
+			int invSlot1 = 36 + slot1;
+			int invSlot2 = 36 + slot2;
+			int syncId = MC.player.currentScreenHandler.syncId;
+			
+			MC.interactionManager.clickSlot(syncId, invSlot1, 0,
+				SlotActionType.PICKUP, MC.player);
+			MC.interactionManager.clickSlot(syncId, invSlot2, 0,
+				SlotActionType.PICKUP, MC.player);
+			MC.interactionManager.clickSlot(syncId, invSlot1, 0,
+				SlotActionType.PICKUP, MC.player);
+		}
+	}
+	
+	private void swapHotbarSlotsDicer(int slot1, int slot2)
+	{
+		if(MC.player == null || MC.interactionManager == null)
+			return;
+		
+		MinecraftClient client = MinecraftClient.getInstance();
+		ItemStack stack = client.player.getMainHandStack();
+		Item item = stack.getItem();
+		
+		if(item != Items.GOLDEN_AXE)
+		{
+			int invSlot1 = 36 + slot1;
+			int invSlot2 = 36 + slot2;
+			int syncId = MC.player.currentScreenHandler.syncId;
+			
+			MC.interactionManager.clickSlot(syncId, invSlot1, 0,
+				SlotActionType.PICKUP, MC.player);
+			MC.interactionManager.clickSlot(syncId, invSlot2, 0,
+				SlotActionType.PICKUP, MC.player);
+			MC.interactionManager.clickSlot(syncId, invSlot1, 0,
+				SlotActionType.PICKUP, MC.player);
+		}
 	}
 	
 	private void resetKeys()
@@ -300,15 +298,15 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			skyblockOnCooldown = true;
 			skyblockCooldownStart = now;
 			// -3 -70
-		}else if((y == 70 && !gardenOnCooldown && (x <= 5 && x >= -7)
-			&& (z >= -76 && z <= -62)) || (y == 100 && !gardenOnCooldown))
+		}else if((y == 70 && currentState != State.STASH && !gardenOnCooldown
+			&& (x <= 5 && x >= -7) && (z >= -76 && z <= -62))
+			|| (y == 100 && !gardenOnCooldown))
 		{ // hub or home island
 			MC.player.networkHandler.sendChatCommand("warp garden");
 			gardenOnCooldown = true;
 			gardenCooldownStart = now;
 			hyDisable();
 			hyEnable();
-			currentState = State.FARM;
 		}else if(y == 31 && isLookingAtOakSign() && !skyblockOnCooldown)
 		{ // limbo
 			MC.player.networkHandler.sendChatCommand("l skyblock");

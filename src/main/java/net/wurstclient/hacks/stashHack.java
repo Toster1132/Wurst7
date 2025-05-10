@@ -12,6 +12,7 @@ import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
 import net.wurstclient.events.UpdateListener;
 import net.wurstclient.hack.Hack;
+import net.wurstclient.mixinterface.IKeyBinding;
 import net.minecraft.client.MinecraftClient;
 
 @SearchTags({"stash"})
@@ -27,11 +28,11 @@ public final class stashHack extends Hack implements UpdateListener
 	@Override
 	protected void onEnable()
 	{
-		MC.player.networkHandler.sendChatCommand("storage");
 		hasOpenedStorage = false;
-		clickedSlot27 = false;
 		overclicked = false;
+		hasWarped = false;
 		slot = 0;
+		MC.player.networkHandler.sendChatCommand("hub");
 		start = System.currentTimeMillis();
 		EVENTS.add(UpdateListener.class, this);
 	}
@@ -39,15 +40,16 @@ public final class stashHack extends Hack implements UpdateListener
 	@Override
 	protected void onDisable()
 	{
-		EVENTS.remove(UpdateListener.class, this);
 		MinecraftClient.getInstance().setScreen(null);
+		EVENTS.remove(UpdateListener.class, this);
 	}
 	
 	boolean hasOpenedStorage = false;
-	boolean clickedSlot27 = false;
 	boolean overclicked = false;
 	int slot = 0;
 	long start = System.currentTimeMillis();
+	long PODEJSCIE_DO_BABKI = 2_000L;
+	boolean hasWarped = false;
 	
 	@Override
 	public void onUpdate()
@@ -55,37 +57,46 @@ public final class stashHack extends Hack implements UpdateListener
 		long now = System.currentTimeMillis();
 		long elapsed = now - start;
 		
-		if(!hasOpenedStorage)
+		if(!hasWarped)
 		{
-			MC.player.networkHandler.sendChatMessage("/storage");
-			hasOpenedStorage = true;
-			start = now;
+			MC.player.setYaw(263);
+			MC.player.setPitch(0);
+			
+			if(elapsed >= 500L)
+			{
+				MC.options.forwardKey.setPressed(true);
+				hasWarped = true;
+				start = now;
+			}
+			
 			return;
 		}
 		
+		if(!hasOpenedStorage)
+		{
+			if(elapsed >= PODEJSCIE_DO_BABKI)
+			{
+				MC.options.forwardKey.setPressed(false);
+				IKeyBinding.get(MC.options.useKey).setPressed(true);
+				hasOpenedStorage = true;
+				start = now;
+			}
+			
+			return;
+		}
+		IKeyBinding.get(MC.options.useKey).resetPressedState();
 		if(elapsed < 500L || MC.player.currentScreenHandler == null)
 			return;
 		
 		int syncId = MC.player.currentScreenHandler.syncId;
 		int totalSlots = MC.player.currentScreenHandler.slots.size();
-		int chestSlotCount = totalSlots - 36; // chest slots
+		int chestSlotCount = totalSlots - 36;
 		int playerInvStart = chestSlotCount;
 		int hotbarStart = totalSlots - 9;
 		
-		if(!clickedSlot27)
-		{
-			if(chestSlotCount > 27)
-			{
-				MC.interactionManager.clickSlot(syncId, 27, 0,
-					SlotActionType.PICKUP, MC.player);
-				clickedSlot27 = true;
-				start = now;
-			}
-			return;
-		}
-		
 		if(!overclicked)
 		{
+			// MC.options.attackKey.setPressed(false);
 			int currentSlot = playerInvStart + slot;
 			if(currentSlot < hotbarStart)
 			{
