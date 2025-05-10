@@ -7,7 +7,6 @@
  */
 package net.wurstclient.hacks;
 
-import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.text.Text;
 import net.wurstclient.Category;
 import net.wurstclient.SearchTags;
@@ -49,7 +48,6 @@ public final class FarmingSimHack extends Hack implements UpdateListener
 	public void startFarming()
 	{
 		this.setEnabled(true);
-		swapHotbarSlots(0, 1);
 	}
 	
 	public void stopFarming()
@@ -60,23 +58,6 @@ public final class FarmingSimHack extends Hack implements UpdateListener
 		IKeyBinding.get(MC.options.leftKey).resetPressedState();
 		IKeyBinding.get(MC.options.rightKey).resetPressedState();
 		this.setEnabled(false);
-	}
-	
-	private void swapHotbarSlots(int slot1, int slot2)
-	{
-		if(MC.player == null || MC.interactionManager == null)
-			return;
-		
-		int invSlot1 = 36 + slot1;
-		int invSlot2 = 36 + slot2;
-		int syncId = MC.player.currentScreenHandler.syncId;
-		
-		MC.interactionManager.clickSlot(syncId, invSlot1, 0,
-			SlotActionType.PICKUP, MC.player);
-		MC.interactionManager.clickSlot(syncId, invSlot2, 0,
-			SlotActionType.PICKUP, MC.player);
-		MC.interactionManager.clickSlot(syncId, invSlot1, 0,
-			SlotActionType.PICKUP, MC.player);
 	}
 	
 	@Override

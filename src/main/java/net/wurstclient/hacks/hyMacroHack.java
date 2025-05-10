@@ -39,7 +39,7 @@ public final class hyMacroHack extends Hack implements UpdateListener
 	private static final long PRZEJSCIE_SEC = 4_000L;
 	private static final long PEST_KILL_SEC = 60_000L;
 	private static final long FARM_SEC = 13 * 60_000L + 40_000L;
-	private static final long STASH_DURATION_SEC = 25_000L;
+	private static final long STASH_DURATION_SEC = 17_000L;
 	
 	private State currentState;
 	private long stateStart;
@@ -127,29 +127,32 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			
 			currentState = State.STASH;
 			stateStart = now;
-			notify("Set to FARM state");
+			notify("Set to STASH state");
 			
 			break;
 			case STASH:
 			if(elapsed >= FARM_SEC)
 			{
 				farmingSimHack.stopFarming();
-				resetKeys();
+				
 				stashHack.setEnabled(true);
 				
 				currentState = State.PRZEJSCIE;
 				stateStart = now;
-				notify("Set to STASH state");
+				notify("Set to PRZEJSCIE state");
 			}
 			break;
 			case PRZEJSCIE:
 			if(elapsed >= STASH_DURATION_SEC)
 			{
 				stashHack.setEnabled(false);
-				pestHack.setEnabled(true);
-				currentState = State.PEST_KILL;
-				stateStart = now;
-				notify("Set to PRZEJSCIE state");
+				if(elapsed >= STASH_DURATION_SEC + 1000L)
+				{
+					pestHack.setEnabled(true);
+					currentState = State.PEST_KILL;
+					stateStart = now;
+					notify("Set to PEST_KILL state");
+				}
 				
 			}
 			break;
@@ -298,7 +301,8 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			skyblockOnCooldown = true;
 			skyblockCooldownStart = now;
 			// -3 -70
-		}else if((y == 70 && currentState != State.STASH && !gardenOnCooldown
+		}else if((y == 70 && currentState != State.PRZEJSCIE
+			&& currentState != State.STASH && !gardenOnCooldown
 			&& (x <= 5 && x >= -7) && (z >= -76 && z <= -62))
 			|| (y == 100 && !gardenOnCooldown))
 		{ // hub or home island

@@ -32,8 +32,8 @@ public final class stashHack extends Hack implements UpdateListener
 		overclicked = false;
 		hasWarped = false;
 		slot = 0;
-		MC.player.networkHandler.sendChatCommand("hub");
 		start = System.currentTimeMillis();
+		MC.player.networkHandler.sendChatCommand("hub");
 		EVENTS.add(UpdateListener.class, this);
 	}
 	
@@ -41,6 +41,7 @@ public final class stashHack extends Hack implements UpdateListener
 	protected void onDisable()
 	{
 		MinecraftClient.getInstance().setScreen(null);
+		MC.player.networkHandler.sendChatCommand("warp garden");
 		EVENTS.remove(UpdateListener.class, this);
 	}
 	
@@ -48,7 +49,7 @@ public final class stashHack extends Hack implements UpdateListener
 	boolean overclicked = false;
 	int slot = 0;
 	long start = System.currentTimeMillis();
-	long PODEJSCIE_DO_BABKI = 2_000L;
+	long PODEJSCIE_DO_BABKI = 1_400L;
 	boolean hasWarped = false;
 	
 	@Override
