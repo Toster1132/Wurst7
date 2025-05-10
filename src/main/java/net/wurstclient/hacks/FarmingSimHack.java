@@ -91,7 +91,7 @@ public final class FarmingSimHack extends Hack implements UpdateListener
 			return;
 		}
 		
-		if((z >= -48 && z <= 142) && (x == 49 || x == 63 || x == 77 || x == 91
+		if((z >= -48 && z <= 143) && (x == 49 || x == 63 || x == 77 || x == 91
 			|| x == 105 || x == 119 || x == 133))
 		{
 			IKeyBinding.get(MC.options.rightKey).setPressed(true);
