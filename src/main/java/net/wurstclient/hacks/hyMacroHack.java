@@ -39,7 +39,7 @@ public final class hyMacroHack extends Hack implements UpdateListener
 	private static final long PRZEJSCIE_SEC = 4_000L;
 	private static final long PEST_KILL_SEC = 60_000L;
 	private static final long FARM_SEC = 13 * 60_000L + 40_000L;
-	private static final long STASH_DURATION_SEC = 20_000L;
+	private static final long STASH_DURATION_SEC = 25_000L;
 	
 	private State currentState;
 	private long stateStart;
@@ -133,8 +133,8 @@ public final class hyMacroHack extends Hack implements UpdateListener
 			case STASH:
 			if(elapsed >= FARM_SEC)
 			{
-				resetKeys();
 				farmingSimHack.stopFarming();
+				resetKeys();
 				stashHack.setEnabled(true);
 				
 				currentState = State.PRZEJSCIE;
@@ -223,8 +223,8 @@ public final class hyMacroHack extends Hack implements UpdateListener
 		ItemStack stack = client.player.getMainHandStack();
 		Item item = stack.getItem();
 		
-		if(item != Items.MINECART || item != Items.TNT_MINECART
-			|| item != Items.CHEST_MINECART)
+		if((item != Items.MINECART && item != Items.TNT_MINECART
+			&& item != Items.CHEST_MINECART))
 		{
 			
 			int invSlot1 = 36 + slot1;
